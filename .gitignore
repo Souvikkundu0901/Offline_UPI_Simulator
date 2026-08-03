@@ -1,0 +1,21 @@
+# Java build output
+out/
+*.class
+
+# Local app data
+data/
+*.db
+*.sqlite
+*.sqlite3
+*.ser
+
+# Downloaded local dependencies
+lib/*.jar
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
