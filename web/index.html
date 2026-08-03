@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Offline UPI Pay</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app-shell">
+    <section class="auth-view" id="authView">
+      <div class="brand-panel">
+        <div class="brand-top">
+          <span class="status-dot"></span>
+          <span>Offline packet network</span>
+        </div>
+        <h1>Offline UPI Pay</h1>
+        <p>Practice UPI-style payments, retries, balances, and idempotency without internet or bank servers.</p>
+        <div class="signal-card">
+          <div>
+            <span>Packet ID</span>
+            <strong id="heroPacket">REQ-READY</strong>
+          </div>
+          <div class="signal-bars" aria-hidden="true">
+            <span></span><span></span><span></span><span></span>
+          </div>
+        </div>
+        <div class="feature-grid">
+          <div>
+            <strong>Safe retry</strong>
+            <span>Same packet, same result</span>
+          </div>
+          <div>
+            <strong>Conflict lock</strong>
+            <span>Reject reused IDs</span>
+          </div>
+          <div>
+            <strong>Local vault</strong>
+            <span>Saved in this browser</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="auth-card">
+        <div class="tabs" role="tablist">
+          <button class="tab active" data-auth-tab="login">Login</button>
+          <button class="tab" data-auth-tab="register">Register</button>
+        </div>
+
+        <form class="form active" id="loginForm">
+          <div class="form-heading">
+            <h2>Welcome back</h2>
+            <p>Enter your local UPI ID and PIN.</p>
+          </div>
+          <label>
+            <span>UPI ID</span>
+            <input id="loginUpi" autocomplete="username" placeholder="souvik@offline">
+          </label>
+          <label>
+            <span>UPI PIN</span>
+            <input id="loginPin" type="password" maxlength="4" autocomplete="current-password" placeholder="4 digits">
+          </label>
+          <button class="primary-action" type="submit">Open dashboard</button>
+        </form>
+
+        <form class="form" id="registerForm">
+          <div class="form-heading">
+            <h2>Create account</h2>
+            <p>Make a demo account stored only on this device.</p>
+          </div>
+          <label>
+            <span>Full name</span>
+            <input id="registerName" placeholder="Your name">
+          </label>
+          <label>
+            <span>Mobile number</span>
+            <input id="registerMobile" inputmode="numeric" maxlength="10" placeholder="10 digits">
+          </label>
+          <label>
+            <span>UPI ID</span>
+            <input id="registerUpi" placeholder="name@offline">
+          </label>
+          <label>
+            <span>UPI PIN</span>
+            <input id="registerPin" type="password" maxlength="4" placeholder="4 digits">
+          </label>
+          <button class="primary-action" type="submit">Create account</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="dashboard-view hidden" id="dashboardView">
+      <aside class="sidebar">
+        <div class="logo-mark">UPI</div>
+        <nav>
+          <button class="nav-item active" data-page="payPage">Pay</button>
+          <button class="nav-item" data-page="historyPage">History</button>
+          <button class="nav-item" data-page="usersPage">Users</button>
+        </nav>
+        <button class="ghost-action" id="logoutButton">Logout</button>
+      </aside>
+
+      <section class="workspace">
+        <header class="topbar">
+          <div>
+            <span class="eyebrow">Current account</span>
+            <h2 id="currentName">Welcome</h2>
+            <p id="currentUpi">user@offline</p>
+          </div>
+          <div class="balance-card">
+            <span>Available balance</span>
+            <strong id="balanceText">Rs. 0.00</strong>
+          </div>
+        </header>
+
+        <div class="page active" id="payPage">
+          <section class="payment-layout">
+            <form class="panel payment-panel" id="paymentForm">
+              <div class="panel-heading">
+                <span class="eyebrow">Payment packet</span>
+                <h3>Send money</h3>
+              </div>
+              <div class="split-fields">
+                <label>
+                  <span>Receiver UPI ID</span>
+                  <input id="receiverUpi" placeholder="friend@offline">
+                </label>
+                <label>
+                  <span>Amount</span>
+                  <input id="paymentAmount" inputmode="decimal" placeholder="250.00">
+                </label>
+              </div>
+              <label>
+                <span>Packet request ID</span>
+                <div class="inline-field">
+                  <input id="packetId" placeholder="Auto-generate or type your own">
+                  <button type="button" id="generatePacketButton">Generate</button>
+                </div>
+              </label>
+              <label>
+                <span>UPI PIN</span>
+                <input id="paymentPin" type="password" maxlength="4" placeholder="4 digits">
+              </label>
+              <div class="action-row">
+                <button class="primary-action" type="submit">Send packet</button>
+                <button class="secondary-action" type="button" id="retryButton">Retry last packet</button>
+              </div>
+              <div class="packet-preview">
+                <span>Last packet</span>
+                <strong id="lastPacketText">None yet</strong>
+              </div>
+            </form>
+
+            <section class="side-stack">
+              <form class="panel" id="walletForm">
+                <div class="panel-heading">
+                  <span class="eyebrow">Demo wallet</span>
+                  <h3>Add money</h3>
+                </div>
+                <label>
+                  <span>Amount</span>
+                  <input id="walletAmount" inputmode="decimal" placeholder="500.00">
+                </label>
+                <button class="primary-action" type="submit">Add demo money</button>
+              </form>
+
+              <div class="panel rule-panel">
+                <div class="panel-heading">
+                  <span class="eyebrow">Idempotency</span>
+                  <h3>Duplicate protection</h3>
+                </div>
+                <ol>
+                  <li>First packet creates the transaction.</li>
+                  <li>Same packet returns the saved result.</li>
+                  <li>Same request ID with changed details is blocked.</li>
+                </ol>
+              </div>
+            </section>
+          </section>
+        </div>
+
+        <div class="page" id="historyPage">
+          <section class="panel table-panel">
+            <div class="panel-heading">
+              <span class="eyebrow">Ledger</span>
+              <h3>Transaction history</h3>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Transaction</th>
+                    <th>Date</th>
+                    <th>Type</th>
+                    <th>Amount</th>
+                    <th>Details</th>
+                  </tr>
+                </thead>
+                <tbody id="historyBody"></tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+
+        <div class="page" id="usersPage">
+          <section class="panel table-panel">
+            <div class="panel-heading">
+              <span class="eyebrow">Local directory</span>
+              <h3>Registered users</h3>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>UPI ID</th>
+                    <th>Mobile</th>
+                    <th>Balance</th>
+                  </tr>
+                </thead>
+                <tbody id="usersBody"></tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="app.js"></script>
+</body>
+</html>
